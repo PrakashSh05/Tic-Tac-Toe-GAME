@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Tic-Tac-Toe</h1>
+        <p id="turn-text">Turn: {{ turn }}</p>
+        <div class="board">
+            {% for i in range(3) %}
+                <div class="row">
+                    {% for j in range(3) %}
+                        <button class="cell" id="cell-{{ i }}-{{ j }}" onclick="makeMove('{{ i }}', '{{ j }}')">
+                            {{ board[i][j] }}
+                        </button>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+        <h2 id="winner-text"></h2>
+        <button onclick="resetGame()">Reset Game</button>
+    </div>
+
+    <script>
+        function makeMove(row, col) {
+            fetch(`/move/${row}/${col}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                const board = data.board;
+                const winner = data.winner;
+                const turn = data.turn;
+
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        let cell = document.getElementById(`cell-${i}-${j}`);
+                        cell.innerText = board[i][j] || '';
+                        cell.disabled = board[i][j] !== ''; 
+                    }
+                }
+
+                if (winner) {
+                    document.getElementById("winner-text").innerText = `${winner} wins!`;
+                    disableBoard();
+                } else {
+                    document.getElementById("turn-text").innerText = `Turn: ${turn}`;
+                }
+            });
+        }
+
+        function disableBoard() {
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    document.getElementById(`cell-${i}-${j}`).disabled = true;
+                }
+            }
+        }
+
+        function resetGame() {
+            fetch('/reset', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                const board = data.board;
+                const turn = data.turn;
+
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        let cell = document.getElementById(`cell-${i}-${j}`);
+                        cell.innerText = '';
+                        cell.disabled = false;
+                    }
+                }
+
+                document.getElementById("turn-text").innerText = `Turn: ${turn}`;
+                document.getElementById("winner-text").innerText = "";
+            });
+        }
+    </script>
+</body>
+</html>
